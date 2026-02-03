@@ -43,27 +43,41 @@ export const register = async (
     const otpCode = generateOTP();
     const otpExpiry = getOTPExpiry(10); // 10 phút
 
-    // Tạo user mới (chưa verified)
+    // Tạo user mới - AUTO VERIFY vì Render chặn SMTP
     const user = new User({
       name,
       email,
       password,
       otpCode,
       otpExpiry,
-      isVerified: false,
+      isVerified: true, // Auto verify vì không gửi được email trên Render
     });
 
     await user.save();
 
-    // Gửi OTP qua email
-    await sendOTPEmail(email, otpCode, name);
+    // Thử gửi OTP qua email (không block nếu fail)
+    sendOTPEmail(email, otpCode, name).catch((err) => {
+      console.log(
+        "⚠️ Không gửi được email OTP (Render chặn SMTP):",
+        err.message,
+      );
+    });
+
+    // Tạo token luôn để user có thể đăng nhập ngay
+    const token = createToken(user as IUserDocument);
 
     res.status(201).json({
       success: true,
-      message: "Đăng ký thành công! Vui lòng kiểm tra email để nhận mã OTP.",
+      message: "Đăng ký thành công! Bạn có thể đăng nhập ngay.",
       data: {
-        email: user.email,
-        requiresOTP: true,
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isVerified: user.isVerified,
+        },
       },
     });
   } catch (error) {

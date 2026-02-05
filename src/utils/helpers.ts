@@ -109,6 +109,18 @@ export const isWithinTimeRange = (beginAt: string, endAt: string): boolean => {
   const now = getVietnamTime();
   const begin = parseTimeStringVN(beginAt, now);
   const end = parseTimeStringVN(endAt, now);
+
+  // Debug log
+  console.log("[TimeCheck] Server time:", new Date().toISOString());
+  console.log("[TimeCheck] Vietnam time:", now.toISOString());
+  console.log(
+    "[TimeCheck] Begin:",
+    begin.toISOString(),
+    "End:",
+    end.toISOString(),
+  );
+  console.log("[TimeCheck] Is within range:", now >= begin && now <= end);
+
   return now >= begin && now <= end;
 };
 
